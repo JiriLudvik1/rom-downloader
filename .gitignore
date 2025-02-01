@@ -1,0 +1,16 @@
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+*.test
+
+*.out
+
+go.work
+go.work.sum
+
+.env
+
+electric-goods-449620-g4-0315193b2c54.json
