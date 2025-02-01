@@ -51,21 +51,9 @@ func main() {
 			continue
 		}
 
-		var extension string
-		if underscoreIndex := strings.LastIndex(file.Title, "_"); underscoreIndex != -1 {
-			// Find the portion between the last "_" and the "."
-			dotIndex := strings.LastIndex(file.Title, ".")
-			if dotIndex > underscoreIndex {
-				// Extract and convert to uppercase
-				extension = strings.ToUpper(file.Title[underscoreIndex+1 : dotIndex])
-			} else {
-				// Fallback: extension cannot be determined correctly
-				log.Printf("Skipping file %s: Invalid format (no valid '.' or '_')\n", file.Title)
-				continue
-			}
-		} else {
-			// No underscore found, log or skip
-			log.Printf("Skipping file %s: No valid underscore ('_') found\n", file.Title)
+		extension, err := getFileExtension(file)
+		if err != nil {
+			fmt.Printf("Error getting file extension: %v", err)
 			continue
 		}
 
@@ -90,6 +78,25 @@ func main() {
 		// Add the file to the list of downloaded files
 		existingFileNames = append(existingFileNames, filepath.Join(destFolder, file.Title))
 		log.Printf("Downloaded and sorted file %s into folder %s\n", file.Title, destFolder)
+	}
+}
+
+func getFileExtension(file *drive.File) (string, error) {
+	if underscoreIndex := strings.LastIndex(file.Title, "_"); underscoreIndex != -1 {
+		// Find the portion between the last "_" and the "."
+		dotIndex := strings.LastIndex(file.Title, ".")
+		if dotIndex > underscoreIndex {
+			// Extract and convert to uppercase
+			return strings.ToUpper(file.Title[underscoreIndex+1 : dotIndex]), nil
+		} else {
+			// Fallback: extension cannot be determined correctly
+			log.Printf("Skipping file %s: Invalid format (no valid '.' or '_')\n", file.Title)
+			return "", fmt.Errorf("Skipping file %s: Invalid format (no valid '.' or '_')\n", file.Title)
+		}
+	} else {
+		// No underscore found, log or skip
+		log.Printf("Skipping file %s: No valid underscore ('_') found\n", file.Title)
+		return "", fmt.Errorf("Skipping file %s: Invalid format (no valid '.' or '_')\n", file.Title)
 	}
 }
 
