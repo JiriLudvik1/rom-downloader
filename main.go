@@ -12,32 +12,24 @@ import (
 	"strings"
 )
 
-const (
-	credentialsFileName = "service-account.json"
-	romFolderID         = "1i-SG3ixBSt5dZPn3ihSD9BsWnzgWUfJm"
-	destionationDir     = "C:\\testDir"
-)
-
 func main() {
-	romTypeDestinations := map[string]string{
-		"NES":  filepath.Join(destionationDir, "NES"),
-		"N64":  filepath.Join(destionationDir, "N64"),
-		"SNES": filepath.Join(destionationDir, "SNES"),
-		"GB":   filepath.Join(destionationDir, "GameBoy"),
+	config, err := GetConfiguration()
+	if err != nil {
+		log.Fatalf("Error loading configuration: %v", err)
 	}
 
 	ctx := context.Background()
-	srv, err := drive.NewService(ctx, option.WithCredentialsFile(credentialsFileName))
+	srv, err := drive.NewService(ctx, option.WithCredentialsFile(config.CredentialsFileName))
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	fileList, err := srv.Files.List().Q("'" + romFolderID + "' in parents").Do()
+	fileList, err := srv.Files.List().Q("'" + config.GoogleDriveFolderId + "' in parents").Do()
 	if err != nil {
 		log.Fatalf("Unable to retrieve files: %v", err)
 	}
 
-	existingFileNames, err := getExistingFileNames(destionationDir)
+	existingFileNames, err := getExistingFileNames(config.DestinationFolderRoot)
 	if err != nil {
 		log.Fatalf("Error getting existing file names: %v", err)
 	}
@@ -58,11 +50,12 @@ func main() {
 		}
 
 		// Find the appropriate destination folder
-		destFolder, exists := romTypeDestinations[extension]
+		typeFolder, exists := config.RomTypeDestinations[extension]
 		if !exists {
 			log.Printf("Skipping file %s: No folder configured for %s files\n", file.Title, extension)
 			continue
 		}
+		destFolder := filepath.Join(config.DestinationFolderRoot, typeFolder)
 
 		// Ensure the destination folder exists
 		if err := os.MkdirAll(destFolder, os.ModePerm); err != nil {
@@ -75,8 +68,6 @@ func main() {
 			continue
 		}
 
-		// Add the file to the list of downloaded files
-		existingFileNames = append(existingFileNames, filepath.Join(destFolder, file.Title))
 		log.Printf("Downloaded and sorted file %s into folder %s\n", file.Title, destFolder)
 	}
 }

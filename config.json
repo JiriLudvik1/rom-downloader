@@ -1,0 +1,11 @@
+{
+  "credentialsFileName": "service-account.json",
+  "googleDriveFolderId": "1i-SG3ixBSt5dZPn3ihSD9BsWnzgWUfJm",
+  "destinationFolderRoot": "C:\\testDir",
+  "romTypeDestinations": {
+    "NES": "NES",
+    "N64": "N64",
+    "SNES": "SNES",
+    "GB": "GameBoy"
+  }
+}
