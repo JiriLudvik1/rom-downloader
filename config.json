@@ -1,11 +1,12 @@
 {
   "credentialsFileName": "service-account.json",
   "googleDriveFolderId": "1i-SG3ixBSt5dZPn3ihSD9BsWnzgWUfJm",
-  "destinationFolderRoot": "C:\\testDir",
+  "destinationFolderRoot": "/home/jiri/RetroPie/roms",
   "romTypeDestinations": {
-    "NES": "NES",
-    "N64": "N64",
-    "SNES": "SNES",
-    "GB": "GameBoy"
+    "NES": "nes",
+    "N64": "n64",
+    "SNES": "snes",
+    "GB": "gb",
+    "GBC": "gbc"
   }
 }
