@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 )
 
 func main() {
@@ -34,6 +35,8 @@ func main() {
 		log.Fatalf("Error getting existing file names: %v", err)
 	}
 
+	wg := &sync.WaitGroup{}
+
 	for _, file := range fileList.Items {
 		fmt.Printf("Found file %s \n", file.Title)
 
@@ -42,34 +45,44 @@ func main() {
 			fmt.Printf("File %s already exists\n", file.Title)
 			continue
 		}
-
-		extension, err := getFileExtension(file)
-		if err != nil {
-			fmt.Printf("Error getting file extension: %v", err)
-			continue
-		}
-
-		// Find the appropriate destination folder
-		typeFolder, exists := config.RomTypeDestinations[extension]
-		if !exists {
-			log.Printf("Skipping file %s: No folder configured for %s files\n", file.Title, extension)
-			continue
-		}
-		destFolder := filepath.Join(config.DestinationFolderRoot, typeFolder)
-
-		// Ensure the destination folder exists
-		if err := os.MkdirAll(destFolder, os.ModePerm); err != nil {
-			log.Fatalf("Error creating destination folder %s: %v\n", destFolder, err)
-		}
-
-		// Download the file to the specific folder
-		if downloadFileToFolder(srv, file, destFolder) != nil {
-			log.Printf("Error downloading file %s: %v\n", file.Title, err)
-			continue
-		}
-
-		log.Printf("Downloaded and sorted file %s into folder %s\n", file.Title, destFolder)
+		wg.Add(1)
+		go executeDownload(file, wg, config, srv)
 	}
+	wg.Wait()
+	log.Printf("Done downloading files\n")
+}
+
+func executeDownload(file *drive.File, wg *sync.WaitGroup, config *LoaderConfig, srv *drive.Service) {
+	extension, err := getFileExtension(file)
+	if err != nil {
+		fmt.Printf("Error getting file extension: %v", err)
+		wg.Done()
+		return
+	}
+
+	// Find the appropriate destination folder
+	typeFolder, exists := config.RomTypeDestinations[extension]
+	if !exists {
+		log.Printf("Skipping file %s: No folder configured for %s files\n", file.Title, extension)
+		wg.Done()
+		return
+	}
+	destFolder := filepath.Join(config.DestinationFolderRoot, typeFolder)
+
+	// Ensure the destination folder exists
+	if err := os.MkdirAll(destFolder, os.ModePerm); err != nil {
+		log.Fatalf("Error creating destination folder %s: %v\n", destFolder, err)
+	}
+
+	// Download the file to the specific folder
+	if downloadFileToFolder(srv, file, destFolder) != nil {
+		log.Printf("Error downloading file %s: %v\n", file.Title, err)
+		wg.Done()
+		return
+	}
+
+	log.Printf("Downloaded and sorted file %s into folder %s\n", file.Title, destFolder)
+	wg.Done()
 }
 
 func getFileExtension(file *drive.File) (string, error) {
