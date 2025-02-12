@@ -9,28 +9,34 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"rom-downloader/config"
+	"rom-downloader/subscribing"
 	"strings"
 	"sync"
 )
 
 func main() {
-	config, err := GetConfiguration()
+	configuration, err := config.GetConfiguration()
 	if err != nil {
 		log.Fatalf("Error loading configuration: %v", err)
 	}
 
 	ctx := context.Background()
-	srv, err := drive.NewService(ctx, option.WithCredentialsFile(config.CredentialsFileName))
+	subscribing.StartSubscriber(
+		&ctx,
+		configuration)
+	return
+	srv, err := drive.NewService(ctx, option.WithCredentialsFile(configuration.CredentialsFileName))
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	fileList, err := srv.Files.List().Q("'" + config.GoogleDriveFolderId + "' in parents").Do()
+	fileList, err := srv.Files.List().Q("'" + configuration.GoogleDriveFolderId + "' in parents").Do()
 	if err != nil {
 		log.Fatalf("Unable to retrieve files: %v", err)
 	}
 
-	existingFileNames, err := getExistingFileNames(config.DestinationFolderRoot)
+	existingFileNames, err := getExistingFileNames(configuration.DestinationFolderRoot)
 	if err != nil {
 		log.Fatalf("Error getting existing file names: %v", err)
 	}
@@ -46,13 +52,13 @@ func main() {
 			continue
 		}
 		wg.Add(1)
-		go executeDownload(file, wg, config, srv)
+		go executeDownload(file, wg, configuration, srv)
 	}
 	wg.Wait()
 	log.Printf("Done downloading files\n")
 }
 
-func executeDownload(file *drive.File, wg *sync.WaitGroup, config *LoaderConfig, srv *drive.Service) {
+func executeDownload(file *drive.File, wg *sync.WaitGroup, config *config.LoaderConfig, srv *drive.Service) {
 	extension, err := getFileExtension(file)
 	if err != nil {
 		fmt.Printf("Error getting file extension: %v", err)

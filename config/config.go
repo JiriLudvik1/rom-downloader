@@ -1,4 +1,4 @@
-package main
+package config
 
 import (
 	"encoding/json"
@@ -9,6 +9,9 @@ import (
 type LoaderConfig struct {
 	CredentialsFileName   string            `json:"credentialsFileName"`
 	GoogleDriveFolderId   string            `json:"googleDriveFolderId"`
+	SubscriptionName      string            `json:"subscriptionName"`
+	TopicName             string            `json:"topicName"`
+	ProjectID             string            `json:"projectId"`
 	DestinationFolderRoot string            `json:"destinationFolderRoot"`
 	RomTypeDestinations   map[string]string `json:"romTypeDestinations"`
 }
