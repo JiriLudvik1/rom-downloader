@@ -5,6 +5,8 @@
   "subscriptionName": "",
   "topicName": "",
   "projectId": "",
+  "bucketName": "",
+  "tempFolder": "",
   "romTypeDestinations": {
     "NES": "nes",
     "N64": "n64",

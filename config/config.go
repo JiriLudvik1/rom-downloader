@@ -12,6 +12,8 @@ type LoaderConfig struct {
 	SubscriptionName      string            `json:"subscriptionName"`
 	TopicName             string            `json:"topicName"`
 	ProjectID             string            `json:"projectId"`
+	BucketName            string            `json:"bucketName"`
+	TempFolder            string            `json:"tempFolder"`
 	DestinationFolderRoot string            `json:"destinationFolderRoot"`
 	RomTypeDestinations   map[string]string `json:"romTypeDestinations"`
 }
