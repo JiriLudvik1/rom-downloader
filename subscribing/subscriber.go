@@ -9,7 +9,11 @@ import (
 	"rom-downloader/config"
 )
 
-func StartSubscriber(ctx *context.Context, config *config.LoaderConfig) {
+func StartSubscriber(
+	ctx *context.Context,
+	config *config.LoaderConfig,
+	messages chan<- RomUploadedMessage,
+) {
 	client, err := pubsub.NewClient(
 		*ctx,
 		config.ProjectID,
@@ -22,6 +26,8 @@ func StartSubscriber(ctx *context.Context, config *config.LoaderConfig) {
 	defer client.Close()
 
 	sub := client.Subscription(config.SubscriptionName)
+	log.Printf("Created subscriber for subscription: %s", sub.ID())
+
 	err = sub.Receive(*ctx, func(ctx context.Context, m *pubsub.Message) {
 		log.Printf("Received message: [%s] %s", m.ID, m.Data)
 		var message RomUploadedMessage
@@ -31,6 +37,7 @@ func StartSubscriber(ctx *context.Context, config *config.LoaderConfig) {
 			return
 		}
 		message.MessageId = m.ID
+		messages <- message
 		m.Ack()
 	})
 	if err != nil {

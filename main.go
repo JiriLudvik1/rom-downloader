@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"rom-downloader/config"
+	"rom-downloader/storage/gcs"
 	"rom-downloader/subscribing"
 	"strings"
 	"sync"
@@ -22,9 +23,22 @@ func main() {
 	}
 
 	ctx := context.Background()
-	subscribing.StartSubscriber(
+	gcsClient := gcs.NewGCSClient(&ctx, configuration)
+
+	messages := make(chan subscribing.RomUploadedMessage, 10)
+	go subscribing.StartSubscriber(
 		&ctx,
-		configuration)
+		configuration,
+		messages)
+
+	for message := range messages {
+		err = gcsClient.DownloadFile(message.File)
+		if err != nil {
+			log.Printf("Error downloading file %s: %v", message.File, err)
+			return
+		}
+		fmt.Printf("Downloaded file %s\n", message.File)
+	}
 	return
 	srv, err := drive.NewService(ctx, option.WithCredentialsFile(configuration.CredentialsFileName))
 	if err != nil {
