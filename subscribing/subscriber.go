@@ -3,6 +3,7 @@ package subscribing
 import (
 	"cloud.google.com/go/pubsub"
 	"context"
+	"encoding/json"
 	"google.golang.org/api/option"
 	"log"
 	"rom-downloader/config"
@@ -22,7 +23,14 @@ func StartSubscriber(ctx *context.Context, config *config.LoaderConfig) {
 
 	sub := client.Subscription(config.SubscriptionName)
 	err = sub.Receive(*ctx, func(ctx context.Context, m *pubsub.Message) {
-		log.Printf("Received message: %s", m.Data)
+		log.Printf("Received message: [%s] %s", m.ID, m.Data)
+		var message RomUploadedMessage
+		if err := json.Unmarshal(m.Data, &message); err != nil {
+			log.Printf("Error unmarshalling message: %v", err)
+			m.Nack()
+			return
+		}
+		message.MessageId = m.ID
 		m.Ack()
 	})
 	if err != nil {
