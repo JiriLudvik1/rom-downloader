@@ -37,6 +37,11 @@ func (g *GCSClient) DownloadFile(fileName string) error {
 	obj := bucket.Object(fileName)
 
 	destinationFilePath := filepath.Join(g.config.TempFolder, fileName)
+	destinationDir := filepath.Dir(destinationFilePath)
+	if err := os.MkdirAll(destinationDir, os.ModePerm); err != nil {
+		return fmt.Errorf("failed to create directory %s: %w", destinationDir, err)
+	}
+
 	destinationFile, err := os.Create(destinationFilePath)
 	if err != nil {
 		return fmt.Errorf("failed to create destination file %s: %w", destinationFilePath, err)
