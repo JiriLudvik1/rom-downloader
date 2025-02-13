@@ -22,8 +22,8 @@ func (c *FsClient) ProcessLocalFile(filePath string) error {
 		return err
 	}
 
-	filesToRemove := []string{filePath}
-	defer removeFiles(filesToRemove)
+	filesToRemove := &[]string{filePath}
+	defer func() { removeFiles(*filesToRemove) }()
 
 	// We just want not tagged files let be
 	if extensions.CustomExtension == nil {
@@ -45,7 +45,7 @@ func (c *FsClient) ProcessLocalFile(filePath string) error {
 
 	extractedPath := path.Join(c.config.TempFolder, "extracted")
 	filePaths, err := ExtractArchive(filePath, extractedPath)
-	filesToRemove = append(filesToRemove, filePaths...)
+	*filesToRemove = append(*filesToRemove, filePaths...)
 
 	if err != nil {
 		return err
@@ -80,12 +80,12 @@ func sortFilesToFolders(filePaths []string, consoleFolderPath string) error {
 
 func (c *FsClient) getConsoleFolder(identifier *ConsoleIdentifier) (string, error) {
 	consoleFolder, exists := c.config.RomTypeDestinations[*identifier.CustomExtension]
-	fullconsoleFolder := filepath.Join(c.config.DestinationFolderRoot, consoleFolder)
+	fullConsoleFolder := filepath.Join(c.config.DestinationFolderRoot, consoleFolder)
 	if !exists {
 		return "", fmt.Errorf("no destination folder configured for ROM type: %s", *identifier.CustomExtension)
 
 	}
-	return fullconsoleFolder, nil
+	return fullConsoleFolder, nil
 }
 
 func removeFiles(filePaths []string) error {
