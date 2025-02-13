@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"rom-downloader/config"
 	"rom-downloader/storage/local"
+	"rom-downloader/subscribing"
 )
 
 type Client struct {
@@ -32,7 +33,8 @@ func NewGcsClient(ctx context.Context, config *config.LoaderConfig) *Client {
 	}
 }
 
-func (g *Client) DownloadFile(fileName string) (string, error) {
+func (g *Client) DownloadFile(message *subscribing.RomUploadedMessage) (string, error) {
+	fileName := message.File
 	destinationFilePath := filepath.Join(g.config.TempFolder, fileName)
 	if local.FileExists(destinationFilePath) {
 		log.Printf("File %s already exists, skipping download", destinationFilePath)
@@ -44,7 +46,7 @@ func (g *Client) DownloadFile(fileName string) (string, error) {
 		return "", fmt.Errorf("failed to create directory %s: %w", destinationDir, err)
 	}
 
-	bucket := g.storageClient.Bucket(g.config.BucketName)
+	bucket := g.storageClient.Bucket(message.Bucket)
 	obj := bucket.Object(fileName)
 
 	destinationFile, err := os.Create(destinationFilePath)

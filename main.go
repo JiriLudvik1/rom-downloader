@@ -49,7 +49,7 @@ func main() {
 	}()
 
 	for message := range messages {
-		localFilePath, err := gcsClient.DownloadFile(message.File)
+		localFilePath, err := gcsClient.DownloadFile(&message)
 		if err != nil {
 			log.Printf("Error downloading file %s: %v", message.File, err)
 			continue
