@@ -37,22 +37,22 @@ func fileIsArchive(filePath string) bool {
 func getFileExtensions(filePath string) (*ConsoleIdentifier, error) {
 	fileName := filepath.Base(filePath)
 
-	underscoreIndex := strings.LastIndex(fileName, "_")
-	if underscoreIndex == -1 {
-		log.Printf("Skipping file %s: No valid underscore ('_') found\n", filePath)
-		return nil, fmt.Errorf("invalid format: no valid underscore ('_') found in %s", filePath)
-	}
-
 	dotIndex := strings.LastIndex(fileName, ".")
-	if dotIndex == -1 || dotIndex <= underscoreIndex {
-		log.Printf("Skipping file %s: Invalid format (no valid '.' after '_')\n", filePath)
-		return nil, fmt.Errorf("invalid format: no valid '.' after '_' in %s", filePath)
+	if dotIndex == -1 {
+		log.Printf("Skipping file %s: Invalid format (no valid '.')\n", filePath)
+		return nil, fmt.Errorf("invalid format: no valid '.' in %s", filePath)
 	}
 
 	fileExtension := fileName[dotIndex:]
 	if fileExtension == "" {
 		log.Printf("Skipping file %s: Empty file extension after '.'\n", filePath)
 		return nil, fmt.Errorf("invalid format: empty file extension in %s", filePath)
+	}
+
+	underscoreIndex := strings.LastIndex(fileName, "_")
+	if underscoreIndex == -1 {
+		log.Printf("Skipping file %s: No valid underscore ('_') found\n", filePath)
+		return nil, fmt.Errorf("invalid format: no valid underscore ('_') found in %s", filePath)
 	}
 
 	customExtension := fileName[underscoreIndex+1 : dotIndex]

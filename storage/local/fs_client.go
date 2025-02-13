@@ -75,9 +75,10 @@ func sortFilesToFolders(filePaths []string, consoleFolderPath string) error {
 
 func (c *FsClient) getConsoleFolder(identifier *ConsoleIdentifier) (string, error) {
 	consoleFolder, exists := c.config.RomTypeDestinations[*identifier.CustomExtension]
+	fullconsoleFolder := filepath.Join(c.config.DestinationFolderRoot, consoleFolder)
 	if !exists {
 		return "", fmt.Errorf("no destination folder configured for ROM type: %s", *identifier.CustomExtension)
 
 	}
-	return consoleFolder, nil
+	return fullconsoleFolder, nil
 }

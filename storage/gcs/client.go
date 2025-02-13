@@ -32,31 +32,31 @@ func NewGCSClient(ctx *context.Context, config *config.LoaderConfig) *GCSClient 
 	}
 }
 
-func (g *GCSClient) DownloadFile(fileName string) error {
+func (g *GCSClient) DownloadFile(fileName string) (string, error) {
 	bucket := g.storageClient.Bucket(g.config.BucketName)
 	obj := bucket.Object(fileName)
 
 	destinationFilePath := filepath.Join(g.config.TempFolder, fileName)
 	destinationDir := filepath.Dir(destinationFilePath)
 	if err := os.MkdirAll(destinationDir, os.ModePerm); err != nil {
-		return fmt.Errorf("failed to create directory %s: %w", destinationDir, err)
+		return "", fmt.Errorf("failed to create directory %s: %w", destinationDir, err)
 	}
 
 	destinationFile, err := os.Create(destinationFilePath)
 	if err != nil {
-		return fmt.Errorf("failed to create destination file %s: %w", destinationFilePath, err)
+		return "", fmt.Errorf("failed to create destination file %s: %w", destinationFilePath, err)
 	}
 	defer destinationFile.Close()
 
 	reader, err := obj.NewReader(*g.context)
 	if err != nil {
-		return fmt.Errorf("failed to create reader for file %s: %w", fileName, err)
+		return "", fmt.Errorf("failed to create reader for file %s: %w", fileName, err)
 	}
 	defer reader.Close()
 
 	_, err = io.Copy(destinationFile, reader)
 	if err != nil {
-		return fmt.Errorf("failed to copy file %s: %w", fileName, err)
+		return "", fmt.Errorf("failed to copy file %s: %w", fileName, err)
 	}
-	return nil
+	return destinationFilePath, nil
 }
