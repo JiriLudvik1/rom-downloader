@@ -22,6 +22,9 @@ func (c *FsClient) ProcessLocalFile(filePath string) error {
 		return err
 	}
 
+	filesToRemove := []string{filePath}
+	defer removeFiles(filesToRemove)
+
 	// We just want not tagged files let be
 	if extensions.CustomExtension == nil {
 		return nil
@@ -42,6 +45,8 @@ func (c *FsClient) ProcessLocalFile(filePath string) error {
 
 	extractedPath := path.Join(c.config.TempFolder, "extracted")
 	filePaths, err := ExtractArchive(filePath, extractedPath)
+	filesToRemove = append(filesToRemove, filePaths...)
+
 	if err != nil {
 		return err
 	}
@@ -81,4 +86,18 @@ func (c *FsClient) getConsoleFolder(identifier *ConsoleIdentifier) (string, erro
 
 	}
 	return fullconsoleFolder, nil
+}
+
+func removeFiles(filePaths []string) error {
+	for _, filePath := range filePaths {
+		if _, err := os.Stat(filePath); os.IsNotExist(err) {
+			continue
+		}
+
+		err := os.Remove(filePath)
+		if err != nil {
+			return fmt.Errorf("failed to remove file %s: %w", filePath, err)
+		}
+	}
+	return nil
 }
