@@ -23,7 +23,11 @@ func StartSubscriber(
 	if err != nil {
 		log.Fatalf("Failed to create client: %v", err)
 	}
-	defer client.Close()
+	defer func() {
+		if err := client.Close(); err != nil {
+			log.Printf("Error closing client: %v", err)
+		}
+	}()
 
 	sub := client.Subscription(config.SubscriptionName)
 	log.Printf("Created subscriber for subscription: %s", sub.ID())

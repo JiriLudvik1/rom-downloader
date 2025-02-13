@@ -2,6 +2,7 @@ package local
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"path"
 	"path/filepath"
@@ -17,6 +18,10 @@ func NewFsClient(config *config.LoaderConfig) *FsClient {
 }
 
 func (c *FsClient) ProcessLocalFile(filePath string) error {
+	if !FileExists(filePath) {
+		return fmt.Errorf("file %s does not exist, skipping processing", filePath)
+	}
+
 	extensions, err := getFileExtensions(filePath)
 	if err != nil {
 		return err
@@ -27,6 +32,7 @@ func (c *FsClient) ProcessLocalFile(filePath string) error {
 
 	// We just want not tagged files let be
 	if extensions.CustomExtension == nil {
+		log.Printf("File %s is not tagged, skipping processing\n", filePath)
 		return nil
 	}
 
@@ -36,10 +42,12 @@ func (c *FsClient) ProcessLocalFile(filePath string) error {
 	}
 
 	if !fileIsArchive(filePath) {
+		log.Printf("File %s is not an archive, skipping extraction\n", filePath)
 		err = sortFilesToFolders([]string{filePath}, consoleFolder)
 		if err != nil {
 			return err
 		}
+		log.Printf("File was moved to %s\n", consoleFolder)
 		return nil
 	}
 
@@ -75,6 +83,7 @@ func sortFilesToFolders(filePaths []string, consoleFolderPath string) error {
 		}
 	}
 
+	log.Printf("Moved %d files to %s\n", len(filePaths), consoleFolderPath)
 	return nil
 }
 
@@ -83,8 +92,8 @@ func (c *FsClient) getConsoleFolder(identifier *ConsoleIdentifier) (string, erro
 	fullConsoleFolder := filepath.Join(c.config.DestinationFolderRoot, consoleFolder)
 	if !exists {
 		return "", fmt.Errorf("no destination folder configured for ROM type: %s", *identifier.CustomExtension)
-
 	}
+
 	return fullConsoleFolder, nil
 }
 

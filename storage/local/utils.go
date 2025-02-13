@@ -28,10 +28,13 @@ var supportedArchives = map[string]func(string, string, *[]string) error{
 	".rar": extractRarWithPaths,
 }
 
-func fileIsArchive(filePath string) bool {
-	lowerExt := strings.ToLower(filepath.Ext(filePath))
-	_, isArchive := supportedArchives[lowerExt]
-	return isArchive
+func FileExists(filePath string) bool {
+	_, err := os.Stat(filePath)
+	if os.IsNotExist(err) {
+		return false
+	}
+
+	return err == nil
 }
 
 func getFileExtensions(filePath string) (*ConsoleIdentifier, error) {
@@ -52,7 +55,7 @@ func getFileExtensions(filePath string) (*ConsoleIdentifier, error) {
 	underscoreIndex := strings.LastIndex(fileName, "_")
 	if underscoreIndex == -1 {
 		log.Printf("Skipping file %s: No valid underscore ('_') found\n", filePath)
-		return nil, fmt.Errorf("invalid format: no valid underscore ('_') found in %s", filePath)
+		return &ConsoleIdentifier{FileExtension: fileExtension, CustomExtension: nil}, nil
 	}
 
 	customExtension := fileName[underscoreIndex+1 : dotIndex]
@@ -65,6 +68,12 @@ func getFileExtensions(filePath string) (*ConsoleIdentifier, error) {
 		CustomExtension: &customExtensionPtr,
 		FileExtension:   strings.ToLower(fileExtension),
 	}, nil
+}
+
+func fileIsArchive(filePath string) bool {
+	lowerExt := strings.ToLower(filepath.Ext(filePath))
+	_, isArchive := supportedArchives[lowerExt]
+	return isArchive
 }
 
 func ExtractArchive(archivePath, destinationPath string) ([]string, error) {
