@@ -10,12 +10,12 @@ import (
 )
 
 func StartSubscriber(
-	ctx *context.Context,
+	ctx context.Context,
 	config *config.LoaderConfig,
 	messages chan<- RomUploadedMessage,
 ) {
 	client, err := pubsub.NewClient(
-		*ctx,
+		ctx,
 		config.ProjectID,
 		option.WithCredentialsFile(config.CredentialsFileName),
 	)
@@ -28,7 +28,7 @@ func StartSubscriber(
 	sub := client.Subscription(config.SubscriptionName)
 	log.Printf("Created subscriber for subscription: %s", sub.ID())
 
-	err = sub.Receive(*ctx, func(ctx context.Context, m *pubsub.Message) {
+	err = sub.Receive(ctx, func(ctx context.Context, m *pubsub.Message) {
 		log.Printf("Received message: [%s] %s", m.ID, m.Data)
 		var message RomUploadedMessage
 		if err := json.Unmarshal(m.Data, &message); err != nil {

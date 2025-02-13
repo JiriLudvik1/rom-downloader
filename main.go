@@ -17,12 +17,12 @@ func main() {
 	}
 
 	ctx := context.Background()
-	gcsClient := gcs.NewGCSClient(&ctx, configuration)
+	gcsClient := gcs.NewClient(ctx, configuration)
 	fsClient := local.NewFsClient(configuration)
 
 	messages := make(chan subscribing.RomUploadedMessage, 10)
 	go subscribing.StartSubscriber(
-		&ctx,
+		ctx,
 		configuration,
 		messages)
 

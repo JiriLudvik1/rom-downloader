@@ -12,27 +12,27 @@ import (
 	"rom-downloader/config"
 )
 
-type GCSClient struct {
+type Client struct {
 	storageClient *storage.Client
-	context       *context.Context
+	context       context.Context
 	config        *config.LoaderConfig
 }
 
-func NewGCSClient(ctx *context.Context, config *config.LoaderConfig) *GCSClient {
-	client, err := storage.NewClient(*ctx, option.WithCredentialsFile(config.CredentialsFileName))
+func NewClient(ctx context.Context, config *config.LoaderConfig) *Client {
+	client, err := storage.NewClient(ctx, option.WithCredentialsFile(config.CredentialsFileName))
 	if err != nil {
 		log.Fatalf("Failed to create client: %v", err)
 	}
 	defer client.Close()
 
-	return &GCSClient{
+	return &Client{
 		storageClient: client,
 		context:       ctx,
 		config:        config,
 	}
 }
 
-func (g *GCSClient) DownloadFile(fileName string) (string, error) {
+func (g *Client) DownloadFile(fileName string) (string, error) {
 	bucket := g.storageClient.Bucket(g.config.BucketName)
 	obj := bucket.Object(fileName)
 
@@ -48,7 +48,7 @@ func (g *GCSClient) DownloadFile(fileName string) (string, error) {
 	}
 	defer destinationFile.Close()
 
-	reader, err := obj.NewReader(*g.context)
+	reader, err := obj.NewReader(g.context)
 	if err != nil {
 		return "", fmt.Errorf("failed to create reader for file %s: %w", fileName, err)
 	}
