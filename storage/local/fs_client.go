@@ -28,7 +28,12 @@ func (c *FsClient) ProcessLocalFile(filePath string) error {
 	}
 
 	filesToRemove := &[]string{filePath}
-	defer func() { removeFiles(*filesToRemove) }()
+	defer func() {
+		err = removeFiles(*filesToRemove)
+		if err != nil {
+			log.Printf("Error removing files: %v", err)
+		}
+	}()
 
 	// We just want not tagged files let be
 	if extensions.CustomExtension == nil {
