@@ -1,7 +1,6 @@
 {
   "credentialsFileName": "service-account.json",
-  "googleDriveFolderId": "1i-SG3ixBSt5dZPn3ihSD9BsWnzgWUfJm",
-  "destinationFolderRoot": "/home/jiri/RetroPie/roms",
+  "destinationFolderRoot": "/home/rpi/RetroPie/roms",
   "subscriptionName": "",
   "topicName": "",
   "projectId": "",
