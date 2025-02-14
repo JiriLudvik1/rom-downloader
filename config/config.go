@@ -3,13 +3,14 @@ package config
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"os"
+	"strings"
 )
 
 type LoaderConfig struct {
 	CredentialsFileName   string            `json:"credentialsFileName"`
-	GoogleDriveFolderId   string            `json:"googleDriveFolderId"`
 	SubscriptionName      string            `json:"subscriptionName"`
 	TopicName             string            `json:"topicName"`
 	ProjectID             string            `json:"projectId"`
@@ -18,12 +19,16 @@ type LoaderConfig struct {
 	RomTypeDestinations   map[string]string `json:"romTypeDestinations"`
 }
 
+const configFileName = "config.json"
+
 func GetConfiguration() (*LoaderConfig, error) {
-	if _, err := os.Stat("config.json"); os.IsNotExist(err) {
-		return nil, errors.New("config.json file not found")
+	if _, err := os.Stat(configFileName); os.IsNotExist(err) {
+		return nil, fmt.Errorf(
+			"config file %s does not exist, please create it",
+			configFileName)
 	}
 
-	configFile, err := os.Open("config.json")
+	configFile, err := os.Open(configFileName)
 	if err != nil {
 		return nil, err
 	}
@@ -41,5 +46,42 @@ func GetConfiguration() (*LoaderConfig, error) {
 		return nil, err
 	}
 
+	err = validateConfig(config)
+	if err != nil {
+		return nil, err
+	}
+
 	return config, nil
+}
+
+func validateConfig(config *LoaderConfig) error {
+	var missingFields []string
+	if config.CredentialsFileName == "" {
+		missingFields = append(missingFields, "credentialsFileName")
+	}
+
+	if config.SubscriptionName == "" {
+		missingFields = append(missingFields, "subscriptionName")
+	}
+
+	if config.TopicName == "" {
+		missingFields = append(missingFields, "topicName")
+	}
+
+	if config.ProjectID == "" {
+		missingFields = append(missingFields, "projectId")
+	}
+
+	if config.TempFolder == "" {
+		missingFields = append(missingFields, "tempFolder")
+	}
+
+	if config.DestinationFolderRoot == "" {
+		missingFields = append(missingFields, "destinationFolderRoot")
+	}
+
+	if len(missingFields) > 0 {
+		return errors.New("missing fields: " + strings.Join(missingFields, ", "))
+	}
+	return nil
 }
