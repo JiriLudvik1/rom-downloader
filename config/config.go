@@ -1,14 +1,19 @@
-package main
+package config
 
 import (
 	"encoding/json"
 	"errors"
+	"log"
 	"os"
 )
 
 type LoaderConfig struct {
 	CredentialsFileName   string            `json:"credentialsFileName"`
 	GoogleDriveFolderId   string            `json:"googleDriveFolderId"`
+	SubscriptionName      string            `json:"subscriptionName"`
+	TopicName             string            `json:"topicName"`
+	ProjectID             string            `json:"projectId"`
+	TempFolder            string            `json:"tempFolder"`
 	DestinationFolderRoot string            `json:"destinationFolderRoot"`
 	RomTypeDestinations   map[string]string `json:"romTypeDestinations"`
 }
@@ -22,7 +27,12 @@ func GetConfiguration() (*LoaderConfig, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer configFile.Close()
+	defer func() {
+		err = configFile.Close()
+		if err != nil {
+			log.Printf("Error closing config file: %v", err)
+		}
+	}()
 
 	decoder := json.NewDecoder(configFile)
 	config := &LoaderConfig{}

@@ -4,4 +4,4 @@
     $env:GOARCH="arm";
     $env:GOARM=7;
     $env:CGO_ENABLED="0";
-    go build -o bin/rom-downloader
+    go build -o _bin/rom-downloader

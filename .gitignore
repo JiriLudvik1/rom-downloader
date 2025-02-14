@@ -14,4 +14,4 @@ go.work.sum
 .env
 
 service-account.json
-/bin
+/_bin
