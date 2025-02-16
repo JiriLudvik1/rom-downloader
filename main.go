@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/signal"
 	"rom-downloader/config"
+	"rom-downloader/persistence"
 	"rom-downloader/storage/gcs"
 	"rom-downloader/storage/local"
 	"rom-downloader/subscribing"
@@ -39,6 +40,11 @@ func main() {
 
 	fsClient := local.NewFsClient(configuration)
 
+	firestoreService, err := persistence.NewFirestoreService(ctx, configuration)
+	if err != nil {
+		log.Fatalf("Error creating firestore service: %v", err)
+	}
+
 	messages := make(chan subscribing.RomUploadedMessage, 10)
 	go func() {
 		subscribing.StartSubscriber(
@@ -58,6 +64,12 @@ func main() {
 		err = fsClient.ProcessLocalFile(localFilePath)
 		if err != nil {
 			log.Printf("Error processing file %s: %v", message.File, err)
+		}
+
+		completeDownload := persistence.CompleteDownloadFromMessage(&message)
+		err = firestoreService.CreateCompleteDownloadDoc(completeDownload)
+		if err != nil {
+			log.Printf("Error writing complete download to firestore: %v", err)
 		}
 	}
 
