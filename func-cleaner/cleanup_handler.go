@@ -1,4 +1,4 @@
-package main
+package func_cleaner
 
 import (
 	"context"
@@ -90,6 +90,7 @@ func CleanupHandler(w http.ResponseWriter, _ *http.Request) {
 	}
 
 	// Return success response
+	log.Printf("Successfully deleted %d documents and corresponding files.", totalDeleted)
 	fmt.Fprintf(w, "Successfully deleted %d documents and corresponding files.\n", totalDeleted)
 }
 
