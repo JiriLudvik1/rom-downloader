@@ -1,4 +1,4 @@
-package func_cleaner
+package main
 
 import (
 	"context"
@@ -12,6 +12,19 @@ import (
 	"cloud.google.com/go/storage"
 	"google.golang.org/api/iterator"
 )
+
+func main() {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	http.HandleFunc("/", CleanupHandler)
+
+	log.Printf("Starting server on port %s...", port)
+	if err := http.ListenAndServe(":"+port, nil); err != nil {
+		log.Fatalf("Failed to start server: %v", err)
+	}
+}
 
 func CleanupHandler(w http.ResponseWriter, _ *http.Request) {
 	ctx := context.Background()
