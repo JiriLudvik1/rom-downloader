@@ -92,7 +92,7 @@ func CleanupHandler(w http.ResponseWriter, _ *http.Request) {
 		// Mark Firestore document as deleted (add DeletedAt timestamp)
 		now := time.Now().UTC()
 		_, err = doc.Ref.Update(ctx, []firestore.Update{
-			{Path: "DeletedAt", Value: now},
+			{Path: "deletedAt", Value: now},
 		})
 		if err != nil {
 			http.Error(w, fmt.Sprintf("Failed to update Firestore document %s: %v", doc.Ref.ID, err), http.StatusInternalServerError)
