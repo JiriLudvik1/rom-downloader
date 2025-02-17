@@ -55,7 +55,7 @@ func CleanupHandler(w http.ResponseWriter, _ *http.Request) {
 
 	// Fetch all documents without DeletedAt
 	collection := firestoreClient.Collection(collectionName)
-	query := collection.Where("DeletedAt", "==", nil) // Retrieve documents where DeletedAt is nil
+	query := collection.Where("deletedAt", "==", nil) // Retrieve documents where DeletedAt is nil
 	iter := query.Documents(ctx)
 
 	totalDeleted := 0
