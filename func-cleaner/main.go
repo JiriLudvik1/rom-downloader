@@ -13,18 +13,9 @@ import (
 	"google.golang.org/api/iterator"
 )
 
-func main() {
-	http.HandleFunc("/", FirestoreAndStorageHandler)
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
-	log.Printf("Listening on port %s", port)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", port), nil))
-}
-
-func FirestoreAndStorageHandler(w http.ResponseWriter, _ *http.Request) {
+func CleanupHandler(w http.ResponseWriter, _ *http.Request) {
 	ctx := context.Background()
+	log.Printf("Starting cleanup...")
 
 	// Initialize Firestore client
 	firestoreClient, err := firestore.NewClient(ctx, os.Getenv("GOOGLE_CLOUD_PROJECT"))
