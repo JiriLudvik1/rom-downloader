@@ -53,9 +53,8 @@ func CleanupHandler(w http.ResponseWriter, _ *http.Request) {
 		return
 	}
 
-	// Fetch all documents without DeletedAt
 	collection := firestoreClient.Collection(collectionName)
-	query := collection.Where("deletedAt", "==", nil) // Retrieve documents where DeletedAt is nil
+	query := collection.Where("isDeleted", "==", false)
 	iter := query.Documents(ctx)
 
 	totalDeleted := 0
@@ -89,10 +88,8 @@ func CleanupHandler(w http.ResponseWriter, _ *http.Request) {
 			return
 		}
 
-		// Mark Firestore document as deleted (add DeletedAt timestamp)
-		now := time.Now().UTC()
 		_, err = doc.Ref.Update(ctx, []firestore.Update{
-			{Path: "deletedAt", Value: now},
+			{Path: "isDeleted", Value: true},
 		})
 		if err != nil {
 			http.Error(w, fmt.Sprintf("Failed to update Firestore document %s: %v", doc.Ref.ID, err), http.StatusInternalServerError)

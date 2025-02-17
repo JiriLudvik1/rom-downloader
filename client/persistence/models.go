@@ -10,6 +10,7 @@ type CompleteDownload struct {
 	FileName     string    `firestore:"fileName"`
 	BucketName   string    `firestore:"bucketName"`
 	DownloadedAt time.Time `firestore:"downloadedAt"`
+	IsDeleted    bool      `firestore:"isDeleted"`
 }
 
 func CompleteDownloadFromMessage(msg *subscribing.RomUploadedMessage) *CompleteDownload {
@@ -18,5 +19,6 @@ func CompleteDownloadFromMessage(msg *subscribing.RomUploadedMessage) *CompleteD
 		FileName:     msg.File,
 		BucketName:   msg.Bucket,
 		DownloadedAt: time.Now().UTC(),
+		IsDeleted:    false,
 	}
 }
