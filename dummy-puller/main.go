@@ -5,6 +5,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
+	"net/http"
 	"os"
 	"strconv"
 	"time"
@@ -18,38 +20,56 @@ type Variables struct {
 }
 
 func main() {
-	ctx := context.Background()
-	variables, err := getEnvVariables()
-	if err != nil {
-		panic(err)
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
 	}
 
-	client, err := pubsub.NewClient(ctx, variables.ProjectID)
-	if err != nil {
-		panic(err)
-	}
-	defer client.Close()
+	go func() {
 
-	sub := client.Subscription(variables.SubscriptionID)
-	fmt.Printf("Listening for messages on subscription %s...\n", variables.SubscriptionID)
-
-	err = sub.Receive(ctx, func(ctx context.Context, msg *pubsub.Message) {
-		msgAge := time.Since(msg.PublishTime)
-		fmt.Printf("Received message: %s | Age: %v\n", msg.ID, msgAge)
-
-		if msgAge > variables.messageAgeLimit {
-			fmt.Printf("Message %s is older than %f minutes. Forcing Dead Letter...\n", msg.ID, variables.messageAgeLimit.Minutes())
-			for i := 0; i < variables.maxNackAttempts; i++ {
-				msg.Nack()
-			}
-			fmt.Printf("Message %s has been nacked %d forced to Dead Letter.\n", msg.ID, variables.maxNackAttempts)
-			return
+		ctx := context.Background()
+		variables, err := getEnvVariables()
+		if err != nil {
+			panic(err)
 		}
-		fmt.Printf("Message %s is younger than 10 minutes, ignoring it\n", msg.ID)
+
+		client, err := pubsub.NewClient(ctx, variables.ProjectID)
+		if err != nil {
+			panic(err)
+		}
+		defer client.Close()
+
+		sub := client.Subscription(variables.SubscriptionID)
+		fmt.Printf("Listening for messages on subscription %s...\n", variables.SubscriptionID)
+
+		err = sub.Receive(ctx, func(ctx context.Context, msg *pubsub.Message) {
+			msgAge := time.Since(msg.PublishTime)
+			fmt.Printf("Received message: %s | Age: %v\n", msg.ID, msgAge)
+
+			if msgAge > variables.messageAgeLimit {
+				fmt.Printf("Message %s is older than %f minutes. Forcing Dead Letter...\n", msg.ID, variables.messageAgeLimit.Minutes())
+				for i := 0; i < variables.maxNackAttempts; i++ {
+					msg.Nack()
+				}
+				fmt.Printf("Message %s has been nacked %d forced to Dead Letter.\n", msg.ID, variables.maxNackAttempts)
+				return
+			}
+			fmt.Printf("Message %s is younger than 10 minutes, ignoring it\n", msg.ID)
+		})
+		if err != nil {
+			panic(err)
+		}
+	}()
+
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, "Server is running and listening on Cloud Run")
 	})
-	if err != nil {
-		panic(err)
+
+	log.Printf("Server is listening on port %s", port)
+	if err := http.ListenAndServe(":"+port, nil); err != nil {
+		log.Fatalf("Failed to start HTTP server: %v", err)
 	}
+
 }
 
 func getEnvVariables() (Variables, error) {
